@@ -1,0 +1,55 @@
+{% set border_char = "=" %}
+{% set border_length = 80 %}
+{{ border_char * border_length }}
+
+   ███████╗██╗   ██╗███╗   ███╗███╗   ███╗██╗████████╗███████╗████████╗██╗  ██╗██╗ ██████╗
+   ██╔════╝██║   ██║████╗ ████║████╗ ████║██║╚══██╔══╝██╔════╝╚══██╔══╝██║  ██║██║██╔════╝
+   ███████╗██║   ██║██╔████╔██║██╔████╔██║██║   ██║   █████╗     ██║   ███████║██║██║     
+   ╚════██║██║   ██║██║╚██╔╝██║██║╚██╔╝██║██║   ██║   ██╔══╝     ██║   ██╔══██║██║██║     
+   ███████║╚██████╔╝██║ ╚═╝ ██║██║ ╚═╝ ██║██║   ██║   ███████╗   ██║   ██║  ██║██║╚██████╗
+   ╚══════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚═╝╚═╝   ╚═╝   ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝ ╚═════╝
+
+{{ border_char * border_length }}
+
+🌟 {{ common_motd_custom_message | default("Welcome to " + common_motd_company) }}
+
+📍 SYSTEM INFORMATION
+   Hostname    : {{ ansible_hostname }}
+   Environment : {{ common_motd_environment | default(ansible_hostname) }}
+   OS          : {{ ansible_distribution }} {{ ansible_distribution_version }}
+   Kernel      : {{ ansible_kernel }}
+   Architecture: {{ ansible_architecture }}
+{% if common_motd_show_system_info %}
+   CPU Cores   : {{ ansible_processor_vcpus }}
+   Memory      : {{ (ansible_memtotal_mb / 1024) | round(1) }} GB
+   Disk Space  : {{ (ansible_mounts | selectattr('mount', 'equalto', '/') | map(attribute='size_total') | first / (1024**3)) | round(1) }} GB
+{% endif %}
+
+🕒 SYSTEM STATUS
+   Current Time: {{ ansible_date_time.iso8601 }}
+   Timezone    : {{ common_timezone | default(ansible_date_time.tz) }}
+   Uptime      : {{ ansible_uptime_seconds | int | human_readable }}
+   Load Average: {{ ansible_loadavg.1m }}, {{ ansible_loadavg.5m }}, {{ ansible_loadavg.15m }}
+
+{% if common_motd_show_last_login %}
+🔐 SECURITY NOTICE
+   - All activities on this system are monitored and logged
+   - Unauthorized access is strictly prohibited
+   - Report security incidents immediately
+   - Follow company ethical guidelines and policies
+{% endif %}
+
+💡 QUICK TIPS
+   • Use 'htop' for system monitoring
+   • Check logs with 'journalctl -f'
+   • System updates: Use Ansible automation
+   • Documentation: Check /opt/scripts/
+
+📞 SUPPORT
+   For technical support or ethical concerns:
+   📧 devops@summitethic.com
+   🌐 https://summitethic.com/support
+
+{{ border_char * border_length }}
+🚀 Building ethical solutions with modern DevOps practices
+{{ border_char * border_length }}

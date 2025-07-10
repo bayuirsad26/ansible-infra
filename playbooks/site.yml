@@ -1,0 +1,43 @@
+---
+# Main playbook for SummitEthic infrastructure
+- name: Configure SummitEthic Infrastructure
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Update package cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+      tags: always
+
+    - name: Install Python dependencies
+      ansible.builtin.package:
+        name:
+          - python3-pip
+          - python3-setuptools
+        state: present
+      tags: always
+
+  roles:
+    - role: common
+      tags: ['common', 'base']
+
+  post_tasks:
+    - name: Verify hostname configuration
+      ansible.builtin.debug:
+        msg: "Hostname has been set to: {{ ansible_hostname }}"
+      tags: verify
+
+    - name: Display system information
+      ansible.builtin.debug:
+        msg: |
+          System configured successfully:
+          - OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          - Hostname: {{ ansible_hostname }}
+          - IP: {{ ansible_default_ipv4.address }}
+          - CPU: {{ ansible_processor_vcpus }} cores
+          - Memory: {{ ansible_memtotal_mb // 1024 }} GB
+      tags: verify

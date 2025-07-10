@@ -1,0 +1,102 @@
+---
+# Test playbook for common role
+- name: Test Common Role Configuration
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Test hostname configuration
+      ansible.builtin.command: hostname
+      register: hostname_result
+      changed_when: false
+
+    - name: Verify hostname
+      ansible.builtin.assert:
+        that:
+          - hostname_result.stdout == common_hostname
+        fail_msg: "Hostname not set correctly"
+        success_msg: "Hostname configured successfully"
+      tags: test_hostname
+
+    - name: Test essential packages
+      ansible.builtin.package_facts:
+
+    - name: Verify essential packages are installed
+      ansible.builtin.assert:
+        that:
+          - "'curl' in ansible_facts.packages"
+          - "'git' in ansible_facts.packages"
+          - "'htop' in ansible_facts.packages"
+          - "'vim' in ansible_facts.packages"
+        fail_msg: "Essential packages are missing"
+        success_msg: "All essential packages installed"
+      tags: test_packages
+
+    - name: Test timezone configuration
+      ansible.builtin.command: timedatectl show --property=Timezone --value
+      register: timezone_result
+      changed_when: false
+
+    - name: Verify timezone
+      ansible.builtin.assert:
+        that:
+          - timezone_result.stdout == common_timezone
+        fail_msg: "Timezone not set correctly"
+        success_msg: "Timezone configured successfully"
+      tags: test_timezone
+
+    - name: Test system limits
+      ansible.builtin.command: ulimit -n
+      register: ulimit_result
+      changed_when: false
+
+    - name: Verify system limits
+      ansible.builtin.assert:
+        that:
+          - ulimit_result.stdout|int >= 65536
+        fail_msg: "System limits not configured correctly"
+        success_msg: "System limits configured successfully"
+      tags: test_limits
+
+    - name: Test MOTD file
+      ansible.builtin.stat:
+        path: /etc/motd
+      register: motd_stat
+
+    - name: Verify MOTD exists
+      ansible.builtin.assert:
+        that:
+          - motd_stat.stat.exists
+        fail_msg: "MOTD file not created"
+        success_msg: "MOTD file created successfully"
+      tags: test_motd
+
+    - name: Test custom directories
+      ansible.builtin.stat:
+        path: "{{ item.path }}"
+      register: dir_stats
+      loop: "{{ common_directories }}"
+
+    - name: Verify directories exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.isdir
+        fail_msg: "Directory {{ item.item.path }} not created"
+        success_msg: "Directory {{ item.item.path }} created successfully"
+      loop: "{{ dir_stats.results }}"
+      tags: test_directories
+
+    - name: Display configuration summary
+      ansible.builtin.debug:
+        msg: |
+          🎉 SummitEthic Common Role Test Results:
+          ✅ Hostname: {{ hostname_result.stdout }}
+          ✅ Timezone: {{ timezone_result.stdout }}
+          ✅ System Limits: {{ ulimit_result.stdout }}
+          ✅ Essential packages installed
+          ✅ MOTD configured
+          ✅ Directory structure created
+
+          🚀 Server is ready for SummitEthic operations!

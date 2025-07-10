@@ -1,0 +1,203 @@
+# /etc/bash.bashrc (Debian) or /etc/bashrc (RedHat)
+# {{ ansible_managed }}
+# Global bashrc configuration for SummitEthic systems
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# History configuration
+HISTCONTROL=ignoreboth:erasedups
+HISTSIZE={{ common_shell_history_size | default(10000) }}
+HISTFILESIZE={{ common_shell_history_file_size | default(20000) }}
+HISTTIMEFORMAT="%Y-%m-%d %H:%M:%S "
+
+# Append to history file, don't overwrite it
+shopt -s histappend
+
+# Check window size after each command
+shopt -s checkwinsize
+
+# Enable globstar for recursive globbing
+shopt -s globstar 2>/dev/null
+
+# Make less more friendly for non-text input files
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+{% if common_shell_enable_color %}
+# Enable color support
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    
+    # Colorized ls
+    alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+
+# Colored prompt
+if [ "$EUID" -eq 0 ]; then
+    # Root prompt (red)
+    PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
+    # Regular user prompt (green)
+    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+fi
+{% else %}
+# Simple prompt without colors
+PS1='\u@\h:\w\$ '
+{% endif %}
+
+{% if common_shell_custom_aliases %}
+# Custom aliases for efficiency
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# System monitoring aliases
+alias df='df -h'
+alias du='du -h'
+alias free='free -h'
+alias ps='ps aux'
+alias psg='ps aux | grep'
+alias top='htop'
+
+# Network utilities
+alias ports='netstat -tulanp'
+alias ping='ping -c 5'
+alias myip='curl -s ifconfig.me'
+
+# Log viewing shortcuts
+alias logs='journalctl -f'
+alias syslog='tail -f /var/log/syslog'
+alias authlog='tail -f /var/log/auth.log'
+
+# Git shortcuts (if git is available)
+if command -v git &> /dev/null; then
+    alias gs='git status'
+    alias ga='git add'
+    alias gc='git commit'
+    alias gp='git push'
+    alias gl='git log --oneline'
+    alias gd='git diff'
+fi
+
+# Docker shortcuts (if docker is available)
+if command -v docker &> /dev/null; then
+    alias dps='docker ps'
+    alias dpsa='docker ps -a'
+    alias di='docker images'
+    alias dlog='docker logs -f'
+    alias dexec='docker exec -it'
+fi
+
+# Kubernetes shortcuts (if kubectl is available)
+if command -v kubectl &> /dev/null; then
+    alias k='kubectl'
+    alias kgp='kubectl get pods'
+    alias kgs='kubectl get services'
+    alias kgd='kubectl get deployments'
+    alias kdesc='kubectl describe'
+    alias klogs='kubectl logs -f'
+fi
+
+# Ansible shortcuts
+alias ap='ansible-playbook'
+alias av='ansible-vault'
+alias ai='ansible-inventory'
+{% endif %}
+
+# Safety aliases
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+# Navigation helpers
+alias home='cd ~'
+alias scripts='cd /opt/scripts'
+alias logs_dir='cd /var/log'
+
+# System information functions
+function sysinfo() {
+    echo "=== System Information ==="
+    echo "Hostname: $(hostname)"
+    echo "OS: $(lsb_release -d | cut -f2 2>/dev/null || cat /etc/os-release | grep PRETTY_NAME | cut -d'"' -f2)"
+    echo "Kernel: $(uname -r)"
+    echo "Uptime: $(uptime -p 2>/dev/null || uptime)"
+    echo "Load: $(cat /proc/loadavg | awk '{print $1, $2, $3}')"
+    echo "Memory: $(free -h | grep Mem | awk '{print $3"/"$2}')"
+    echo "Disk: $(df -h / | tail -1 | awk '{print $3"/"$2" ("$5" used)"}')"
+}
+
+function weather() {
+    curl -s "wttr.in/${1:-Jakarta}?format=3"
+}
+
+# Ethical reminder function
+function ethics() {
+    echo "🌟 SummitEthic Ethical Guidelines:"
+    echo "  • Transparency in all operations"
+    echo "  • Respect for data privacy"
+    echo "  • Sustainable development practices"
+    echo "  • Collaborative problem-solving"
+    echo "  • Continuous learning and improvement"
+    echo ""
+    echo "Remember: Our code of ethics guides every decision we make."
+}
+
+# Quick system health check
+function healthcheck() {
+    echo "=== Quick System Health Check ==="
+    echo "Load Average: $(cat /proc/loadavg | awk '{print $1, $2, $3}')"
+    echo "Memory Usage: $(free | grep Mem | awk '{printf "%.1f%%", $3/$2 * 100.0}')"
+    echo "Disk Usage (root): $(df / | tail -1 | awk '{print $5}')"
+    echo "Active Connections: $(ss -tun | wc -l)"
+    echo "Running Processes: $(ps aux | wc -l)"
+    echo "Last 5 Failed Logins:"
+    lastb | head -5 2>/dev/null || echo "  No failed login attempts found"
+}
+
+# Environment indicator
+if [ -n "$SSH_CONNECTION" ]; then
+    echo "🔗 Connected via SSH from: $(echo $SSH_CONNECTION | awk '{print $1}')"
+fi
+
+# Welcome message for interactive shells
+if [[ $- == *i* ]] && [ -z "$TMUX" ]; then
+    echo ""
+    echo "🚀 Welcome to SummitEthic DevOps Environment"
+    echo "💡 Type 'ethics' for our ethical guidelines"
+    echo "🔍 Type 'sysinfo' for system information"
+    echo "🏥 Type 'healthcheck' for system health status"
+    echo ""
+fi
+
+# Custom functions for DevOps workflows
+function deploy_check() {
+    echo "🔍 Pre-deployment safety checks:"
+    echo "  ✓ Environment: ${ENVIRONMENT:-$(hostname)}"
+    echo "  ✓ User: $(whoami)"
+    echo "  ✓ Time: $(date)"
+    echo "  ✓ Git branch: $(git branch --show-current 2>/dev/null || echo 'Not a git repository')"
+    echo ""
+    read -p "Continue with deployment? [y/N]: " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "✅ Deployment approved. Proceeding..."
+        return 0
+    else
+        echo "❌ Deployment cancelled."
+        return 1
+    fi
+}
+
+# Load any local customizations
+if [ -f ~/.bashrc.local ]; then
+    source ~/.bashrc.local
+fi

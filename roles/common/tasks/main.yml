@@ -1,0 +1,204 @@
+---
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ common_timezone }}"
+  notify: restart rsyslog
+  tags: timezone
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ common_hostname | default(inventory_hostname) }}"
+  when: common_set_hostname | bool
+  tags: hostname
+
+- name: Update package cache (Debian/Ubuntu)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+  tags: packages
+
+- name: Update package cache (RedHat/CentOS)
+  ansible.builtin.dnf:
+    update_cache: true
+  when: ansible_os_family == "RedHat"
+  tags: packages
+
+- name: Install essential packages
+  ansible.builtin.package:
+    name: "{{ common_packages }}"
+    state: present
+  tags: packages
+
+- name: Install distribution-specific packages
+  ansible.builtin.package:
+    name: "{{ common_packages_distro }}"
+    state: present
+  when: common_packages_distro is defined
+  tags: packages
+
+- name: Create system groups
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid | default(omit) }}"
+    state: present
+  loop: "{{ common_groups }}"
+  when: common_groups is defined
+  tags: users
+
+- name: Create system users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid | default(omit) }}"
+    group: "{{ item.group | default(item.name) }}"
+    groups: "{{ item.groups | default([]) }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    home: "{{ item.home | default('/home/' + item.name) }}"
+    create_home: "{{ item.create_home | default(true) }}"
+    state: present
+  loop: "{{ common_users }}"
+  when: common_users is defined
+  tags: users
+
+- name: Set up sudo access for users
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/common-users
+    line: "{{ item.name }} ALL=(ALL) NOPASSWD:ALL"
+    create: true
+    mode: '0440'
+    validate: 'visudo -cf %s'
+  loop: "{{ common_users }}"
+  when:
+    - common_users is defined
+    - item.sudo | default(false) | bool
+  tags: users
+
+- name: Configure locale
+  community.general.locale_gen:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ common_locales }}"
+  when: ansible_os_family == "Debian"
+  tags: locale
+
+- name: Set default locale
+  ansible.builtin.lineinfile:
+    path: /etc/default/locale
+    regexp: '^LANG='
+    line: 'LANG={{ common_default_locale }}'
+    create: true
+    mode: '0644'
+  when: ansible_os_family == "Debian"
+  notify: restart rsyslog
+  tags: locale
+
+- name: Configure system locale (RedHat)
+  ansible.builtin.lineinfile:
+    path: /etc/locale.conf
+    regexp: '^LANG='
+    line: 'LANG={{ common_default_locale }}'
+    create: true
+    mode: '0644'
+  when: ansible_os_family == "RedHat"
+  notify: restart rsyslog
+  tags: locale
+
+- name: Configure NTP/chrony service
+  ansible.builtin.service:
+    name: "{{ common_ntp_service }}"
+    state: started
+    enabled: true
+  tags: ntp
+
+- name: Configure message of the day
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    mode: '0644'
+    backup: true
+  tags: motd
+
+- name: Configure global bashrc
+  ansible.builtin.template:
+    src: bashrc.j2
+    dest: /etc/bash.bashrc
+    mode: '0644'
+    backup: true
+  when: ansible_os_family == "Debian"
+  tags: shell
+
+- name: Configure global bashrc (RedHat)
+  ansible.builtin.template:
+    src: bashrc.j2
+    dest: /etc/bashrc
+    mode: '0644'
+    backup: true
+  when: ansible_os_family == "RedHat"
+  tags: shell
+
+- name: Set kernel parameters
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop: "{{ common_sysctl_params }}"
+  when: common_sysctl_params is defined
+  tags: kernel
+
+- name: Configure log rotation
+  ansible.builtin.template:
+    src: logrotate.conf.j2
+    dest: /etc/logrotate.d/common
+    mode: '0644'
+  when: common_logrotate_configs is defined
+  tags: logging
+
+- name: Create common directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+  loop: "{{ common_directories }}"
+  when: common_directories is defined
+  tags: directories
+
+- name: Configure system limits
+  community.general.pam_limits:
+    domain: "{{ item.domain }}"
+    limit_type: "{{ item.type }}"
+    limit_item: "{{ item.item }}"
+    value: "{{ item.value }}"
+  loop: "{{ common_limits }}"
+  when: common_limits is defined
+  tags: limits
+
+- name: Enable and start essential services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop: "{{ common_services }}"
+  when: common_services is defined
+  tags: services
+
+- name: Disable unnecessary services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop: "{{ common_disabled_services }}"
+  when: common_disabled_services is defined
+  failed_when: false
+  tags: services
+
+- name: Update system packages (when requested)  # noqa package-latest
+  ansible.builtin.package:
+    name: "*"
+    state: latest
+  when: common_update_all_packages | bool
+  tags:
+    - packages
+    - never

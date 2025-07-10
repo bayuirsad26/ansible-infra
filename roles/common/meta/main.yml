@@ -1,0 +1,33 @@
+---
+galaxy_info:
+  role_name: common
+  author: SummitEthic DevOps Team
+  description: Base server configuration for all systems
+  company: SummitEthic
+  license: MIT
+  min_ansible_version: "2.12"
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+
+  galaxy_tags:
+    - system
+    - base
+    - configuration
+    - devops
+    - security
+    - monitoring
+
+dependencies: []

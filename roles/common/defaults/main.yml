@@ -1,0 +1,134 @@
+---
+# Basic system configuration
+common_timezone: "UTC"
+common_default_locale: "en_US.UTF-8"
+common_set_hostname: false
+common_update_all_packages: false
+
+# Locale configuration
+common_locales:
+  - en_US.UTF-8
+  - C.UTF-8
+
+# Essential packages for all systems
+common_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - git
+  - unzip
+  - tar
+  - rsync
+  - sudo
+  - cron
+  - logrotate
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
+# Distribution-specific packages
+common_packages_debian:
+  - apt-transport-https
+  - software-properties-common
+  - dirmngr
+  - systemd-timesyncd
+  - ufw
+
+common_packages_redhat:
+  - epel-release
+  - yum-utils
+  - chrony
+  - firewalld
+
+# Set distribution-specific packages based on OS family
+common_packages_distro: "{{ common_packages_debian if ansible_os_family == 'Debian' else common_packages_redhat }}"
+
+# NTP service configuration
+common_ntp_service: "{{ 'systemd-timesyncd' if ansible_os_family == 'Debian' else 'chronyd' }}"
+
+# System services to enable
+common_services:
+  - cron
+  - rsyslog
+
+# Services to disable (common unnecessary services)
+common_disabled_services:
+  - bluetooth
+  - cups
+  - avahi-daemon
+
+# Default system users (empty by default, override in group_vars/host_vars)
+common_users: []
+common_groups: []
+
+# Common directories to create
+common_directories:
+  - path: /opt/scripts
+    mode: '0755'
+    owner: root
+    group: root
+  - path: /var/log/applications
+    mode: '0755'
+    owner: root
+    group: root
+
+# Kernel parameters for optimization
+common_sysctl_params:
+  - key: vm.swappiness
+    value: 10
+  - key: net.core.rmem_max
+    value: 134217728
+  - key: net.core.wmem_max
+    value: 134217728
+  - key: net.ipv4.tcp_rmem
+    value: "4096 65536 134217728"
+  - key: net.ipv4.tcp_wmem
+    value: "4096 65536 134217728"
+  - key: fs.file-max
+    value: 2097152
+
+# System limits configuration
+common_limits:
+  - domain: '*'
+    type: soft
+    item: nofile
+    value: 65536
+  - domain: '*'
+    type: hard
+    item: nofile
+    value: 65536
+  - domain: '*'
+    type: soft
+    item: nproc
+    value: 32768
+  - domain: '*'
+    type: hard
+    item: nproc
+    value: 32768
+
+# Log rotation configurations
+common_logrotate_configs:
+  - name: applications
+    path: /var/log/applications/*.log
+    options:
+      - daily
+      - rotate 30
+      - compress
+      - delaycompress
+      - missingok
+      - notifempty
+      - copytruncate
+
+# MOTD Configuration
+common_motd_company: "SummitEthic"
+common_motd_environment: "{{ ansible_hostname }}"
+common_motd_show_system_info: true
+common_motd_show_last_login: true
+common_motd_custom_message: "Ethical DevOps - Building Tomorrow's Solutions Today"
+
+# Shell configuration
+common_shell_history_size: 10000
+common_shell_history_file_size: 20000
+common_shell_enable_color: true
+common_shell_custom_aliases: true

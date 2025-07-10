@@ -1,0 +1,45 @@
+---
+all:
+  children:
+    summitethic:
+      children:
+        web_servers:
+          hosts:
+            summitethic-web-01:
+              ansible_host: 167.86.108.4
+              ansible_user: admin
+              ansible_become: true
+              ansible_become_method: sudo
+              server_role: web
+              environment: production
+              datacenter: contabo-eu
+
+        app_servers:
+          hosts:
+            # Add future app servers here
+
+        db_servers:
+          hosts:
+            # Add future database servers here
+
+      vars:
+        # SummitEthic global variables
+        company_name: "SummitEthic"
+        company_domain: "summitethic.com"
+        company_email: "devops@summitethic.com"
+
+        # Environment specific
+        env_type: "production"
+        monitoring_enabled: true
+        backup_enabled: true
+
+        # Network configuration
+        dns_servers:
+          - "8.8.8.8"
+          - "8.8.4.4"
+          - "1.1.1.1"
+
+        # Security settings
+        security_level: "high"
+        firewall_enabled: true
+        fail2ban_enabled: true

@@ -1,0 +1,215 @@
+---
+# Global configuration for all servers
+ansible_python_interpreter: /usr/bin/python3
+
+# Common role configuration
+common_timezone: "Asia/Jakarta"  # Contabo EU timezone
+common_default_locale: "en_US.UTF-8"
+common_set_hostname: true
+common_hostname: "{{ company_domain }}"
+common_update_all_packages: false
+
+# Extended locales for international support
+common_locales:
+  - "en_US.UTF-8"
+  - "C.UTF-8"
+  - "id_ID.UTF-8"  # Indonesian locale for SummitEthic team
+
+# Enhanced package list for modern DevOps
+common_packages:
+  - curl
+  - wget
+  - vim
+  - neovim
+  - htop
+  - btop
+  - git
+  - unzip
+  - tar
+  - rsync
+  - sudo
+  - cron
+  - logrotate
+  - ca-certificates
+  - gnupg
+  - lsb-release
+  - jq
+  - tree
+  - ncdu
+  - iotop
+  - nload
+  - tcpdump
+  - net-tools
+  - bind9-utils
+  - telnet
+  - python3-pip
+  - python3-venv
+  - build-essential
+
+# SummitEthic system users
+common_users:
+  - name: devops
+    shell: /bin/bash
+    sudo: true
+    groups: ["docker", "sudo"]
+    create_home: true
+    home: "/home/devops"
+  - name: deployer
+    shell: /bin/bash
+    sudo: false
+    groups: ["docker"]
+    create_home: true
+    home: "/home/deployer"
+
+# System groups
+common_groups:
+  - name: docker
+    gid: 999
+  - name: developers
+    gid: 1100
+
+# Enhanced directories for SummitEthic infrastructure
+common_directories:
+  - path: /opt/summitethic
+    mode: '0755'
+    owner: root
+    group: root
+  - path: /opt/summitethic/scripts
+    mode: '0755'
+    owner: root
+    group: root
+  - path: /opt/summitethic/backups
+    mode: '0750'
+    owner: root
+    group: root
+  - path: /opt/summitethic/logs
+    mode: '0755'
+    owner: root
+    group: root
+  - path: /var/log/summitethic
+    mode: '0755'
+    owner: root
+    group: root
+  - path: /home/shared
+    mode: '0755'
+    owner: root
+    group: developers
+
+# Optimized kernel parameters for web servers
+common_sysctl_params:
+  # Network optimization
+  - key: net.core.rmem_max
+    value: 134217728
+  - key: net.core.wmem_max
+    value: 134217728
+  - key: net.ipv4.tcp_rmem
+    value: "4096 87380 134217728"
+  - key: net.ipv4.tcp_wmem
+    value: "4096 65536 134217728"
+  - key: net.core.netdev_max_backlog
+    value: 5000
+  - key: net.ipv4.tcp_congestion_control
+    value: bbr
+  - key: net.ipv4.tcp_slow_start_after_idle
+    value: 0
+  - key: net.ipv4.tcp_tw_reuse
+    value: 1
+  - key: net.ipv4.ip_local_port_range
+    value: "10000 65000"
+
+  # Memory management
+  - key: vm.swappiness
+    value: 10
+  - key: vm.dirty_ratio
+    value: 15
+  - key: vm.dirty_background_ratio
+    value: 5
+  - key: vm.vfs_cache_pressure
+    value: 50
+
+  # File system
+  - key: fs.file-max
+    value: 2097152
+  - key: fs.inotify.max_user_watches
+    value: 524288
+  - key: fs.inotify.max_user_instances
+    value: 256
+
+# Enhanced system limits for high-performance applications
+common_limits:
+  - domain: '*'
+    type: soft
+    item: nofile
+    value: 65536
+  - domain: '*'
+    type: hard
+    item: nofile
+    value: 65536
+  - domain: '*'
+    type: soft
+    item: nproc
+    value: 32768
+  - domain: '*'
+    type: hard
+    item: nproc
+    value: 32768
+  - domain: root
+    type: soft
+    item: nofile
+    value: 65536
+  - domain: root
+    type: hard
+    item: nofile
+    value: 65536
+
+# Services configuration
+common_services:
+  - cron
+  - rsyslog
+  - systemd-timesyncd
+
+# Services to disable for security and efficiency
+common_disabled_services:
+  - bluetooth
+  - cups
+  - avahi-daemon
+  - snapd
+  - ufw  # We'll configure firewall manually later
+
+# Enhanced log rotation for SummitEthic
+common_logrotate_configs:
+  - name: summitethic-applications
+    path: /var/log/summitethic/*.log
+    options:
+      - daily
+      - rotate 30
+      - compress
+      - delaycompress
+      - missingok
+      - notifempty
+      - copytruncate
+      - create 0644 root root
+  - name: summitethic-access
+    path: /var/log/summitethic/access.log
+    options:
+      - daily
+      - rotate 90
+      - compress
+      - delaycompress
+      - missingok
+      - notifempty
+      - copytruncate
+      - create 0644 root root
+
+# MOTD customization for SummitEthic
+common_motd_company: "SummitEthic"
+common_motd_environment: "Production Server"
+common_motd_show_system_info: true
+common_motd_show_last_login: true
+common_motd_custom_message: "🚀 Ethical DevOps - Building Tomorrow's Solutions Today"
+
+# Shell configuration
+common_shell_history_size: 20000
+common_shell_history_file_size: 50000
+common_shell_enable_color: true
+common_shell_custom_aliases: true

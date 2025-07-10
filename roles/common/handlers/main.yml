@@ -1,0 +1,29 @@
+---
+- name: Restart rsyslog
+  ansible.builtin.systemd:
+    name: rsyslog
+    state: restarted
+  listen: restart rsyslog
+
+- name: Restart chronyd
+  ansible.builtin.systemd:
+    name: chronyd
+    state: restarted
+  listen: restart ntp
+
+- name: Restart systemd-timesyncd
+  ansible.builtin.systemd:
+    name: systemd-timesyncd
+    state: restarted
+  listen: restart ntp
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  listen: reload systemd
+
+- name: Update timezone
+  ansible.builtin.command:
+    cmd: timedatectl set-timezone {{ common_timezone }}
+  changed_when: false
+  listen: update timezone

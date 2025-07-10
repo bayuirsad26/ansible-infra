@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+# Common log rotation configuration
+
+{% for config in common_logrotate_configs %}
+{{ config.path }} {
+{% for option in config.options %}
+    {{ option }}
+{% endfor %}
+}
+
+{% endfor %}
