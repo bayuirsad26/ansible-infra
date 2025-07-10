@@ -25,7 +25,7 @@ lint:
 
 check:
 	@echo "Running playbook in check mode..."
-	ansible-playbook -i inventory/production.yml playbooks/site.yml --check --diff
+	ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml --check --diff
 
 deploy:
 	@echo "Deploying SummitEthic infrastructure..."
@@ -33,7 +33,7 @@ deploy:
 
 test:
 	@echo "Running tests..."
-	ansible-playbook -i inventory/production.yml playbooks/test-common.yml
+	ansible-playbook -i inventory/production/hosts.yml playbooks/test-common.yml
 
 clean:
 	@echo "Cleaning temporary files..."
@@ -43,11 +43,11 @@ clean:
 
 ping:
 	@echo "Testing connectivity..."
-	ansible all -i inventory/production.yml -m ping
+	ansible all -i inventory/production/hosts.yml -m ping
 
 info:
 	@echo "Gathering system information..."
-	ansible all -i inventory/production.yml -m setup --tree /tmp/facts
+	ansible all -i inventory/production/hosts.yml -m setup --tree /tmp/facts
 
 # Development targets
 dev-setup:
@@ -59,4 +59,4 @@ dev-setup:
 dev-check:
 	@echo "Running development checks..."
 	ansible-lint
-	ansible-playbook -i inventory/production.yml playbooks/site.yml --syntax-check
+	ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml --syntax-check

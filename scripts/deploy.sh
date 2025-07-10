@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-INVENTORY_FILE="inventory/production.yml"
+INVENTORY_FILE="inventory/production/hosts.yml"
 PLAYBOOK_FILE="playbooks/site.yml"
 TEST_PLAYBOOK="playbooks/test-common.yml"
 

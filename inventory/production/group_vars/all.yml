@@ -1,9 +1,9 @@
 ---
 # Global configuration for all servers
-ansible_python_interpreter: /usr/bin/python3
+ansible_python_interpreter: /usr/bin/python3.12
 
 # Common role configuration
-common_timezone: "Asia/Jakarta"  # Contabo EU timezone
+common_timezone: "Asia/Jakarta"
 common_default_locale: "en_US.UTF-8"
 common_set_hostname: true
 common_hostname: "{{ company_domain }}"

@@ -44,7 +44,7 @@ make install
 
 ### 2. Configure Inventory
 
-Edit `inventory/production.yml` to match your server details:
+Edit `inventory/production/hosts.yml` to match your server details:
 
 ```yaml
 summitethic-web-01:
@@ -107,26 +107,26 @@ make deploy
 
 ```bash
 # Test connectivity
-ansible all -i inventory/production.yml -m ping
+ansible all -i inventory/production/hosts.yml -m ping
 
 # Deploy common role
-ansible-playbook -i inventory/production.yml playbooks/site.yml
+ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml
 
 # Run tests
-ansible-playbook -i inventory/production.yml playbooks/test-common.yml
+ansible-playbook -i inventory/production/hosts.yml playbooks/test-common.yml
 ```
 
 ### Advanced Usage
 
 ```bash
 # Check mode (dry run)
-ansible-playbook -i inventory/production.yml playbooks/site.yml --check --diff
+ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml --check --diff
 
 # Deploy specific tags
-ansible-playbook -i inventory/production.yml playbooks/site.yml --tags "hostname,packages"
+ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml --tags "hostname,packages"
 
 # Limit to specific hosts
-ansible-playbook -i inventory/production.yml playbooks/site.yml --limit "web_servers"
+ansible-playbook -i inventory/production/hosts.yml playbooks/site.yml --limit "web_servers"
 ```
 
 ### Using the Deployment Script
@@ -185,7 +185,7 @@ common_packages:
 make test
 
 # Run specific test tags
-ansible-playbook -i inventory/production.yml playbooks/test-common.yml --tags "test_hostname"
+ansible-playbook -i inventory/production/hosts.yml playbooks/test-common.yml --tags "test_hostname"
 ```
 
 ### Manual Verification
@@ -258,19 +258,19 @@ ethics
 ssh -o StrictHostKeyChecking=no admin@167.86.108.4
 
 # Check inventory
-ansible-inventory -i inventory/production.yml --list
+ansible-inventory -i inventory/production/hosts.yml --list
 ```
 
 **Permission Issues**
 ```bash
 # Verify sudo access
-ansible all -i inventory/production.yml -m shell -a "sudo whoami"
+ansible all -i inventory/production/hosts.yml -m shell -a "sudo whoami"
 ```
 
 **Package Installation Issues**
 ```bash
 # Update package cache
-ansible all -i inventory/production.yml -m apt -a "update_cache=yes" --become
+ansible all -i inventory/production/hosts.yml -m apt -a "update_cache=yes" --become
 ```
 
 ## 📞 Support

@@ -160,7 +160,7 @@ function healthcheck() {
     echo "Active Connections: $(ss -tun | wc -l)"
     echo "Running Processes: $(ps aux | wc -l)"
     echo "Last 5 Failed Logins:"
-    lastb | head -5 2>/dev/null || echo "  No failed login attempts found"
+    sudo lastb | head -5 2>/dev/null || echo "  No failed login attempts found"
 }
 
 # Environment indicator
